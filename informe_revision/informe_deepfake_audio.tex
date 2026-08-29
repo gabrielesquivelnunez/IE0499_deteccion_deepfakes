@@ -1,0 +1,157 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning}
+\usepackage{booktabs}
+\usepackage{cite}
+\usepackage{url}
+
+\begin{document}
+
+\title{Detección en Tiempo Real de Deepfakes de Audio (Voces Sintéticas)\\
+Aplicada al Español Costarricense\\
+\large Informe de Revisión y Diseño del Sistema de Detección}
+
+\author{
+\IEEEauthorblockN{Gabriel Esquivel Núñez}
+\IEEEauthorblockA{Carné C22799\\
+Escuela de Ingeniería Eléctrica\\
+Universidad de Costa Rica\\
+gabriel.esquivelnunez@ucr.ac.cr}
+}
+
+\maketitle
+
+\begin{abstract}
+Este documento presenta la revisión del estado del arte y el diseño preliminar de un sistema de detección de voces sintéticas (deepfakes de audio) orientado a operación en tiempo real, con aplicación a voces en español costarricense. Se comparan enfoques clásicos basados en características acústicas interpretables con enfoques modernos basados en modelos preentrenados y representaciones autosupervisadas. Se justifica la selección de dos técnicas complementarias para su implementación experimental, se define un protocolo de evaluación y se describe la arquitectura preliminar de un sistema capaz de procesar audio por ventanas sucesivas.
+\end{abstract}
+
+\begin{IEEEkeywords}
+detección de deepfakes de audio, anti-spoofing, verificación de locutor, procesamiento en tiempo real, AASIST, RawNet2, wav2vec2
+\end{IEEEkeywords}
+
+\section{Introducción}
+
+El rápido avance de los sistemas de conversión texto-a-voz (TTS) y conversión de voz (VC) ha reducido drásticamente la brecha entre el habla natural y el habla sintética, lo que representa una amenaza creciente para sistemas de verificación de locutor, autenticación por voz y, en general, para la confianza en contenido de audio. Este proyecto se enmarca dentro del trabajo del laboratorio en evaluación comparativa de sistemas TTS y generación de voces, y busca complementar dichos esfuerzos con un módulo de detección de audio sintético (\emph{anti-spoofing}) capaz de operar sobre flujos de audio continuos, en lugar de archivos completos analizados de forma diferida.
+
+El objetivo de este primer entregable es doble: por un lado, sintetizar el estado del arte en detección de deepfakes de audio, con énfasis en técnicas compatibles con el procesamiento por ventanas; por otro, definir la arquitectura y el protocolo experimental que guiarán las siguientes fases del proyecto (detector base, sistema en tiempo real y demostrador final).
+
+\section{Estado del Arte}
+
+\subsection{El problema de anti-spoofing en verificación de locutor}
+
+La tarea de anti-spoofing consiste en clasificar un segmento de audio como \emph{bona fide} (habla humana genuina) o \emph{spoof} (habla generada o manipulada, ya sea por TTS, conversión de voz, \emph{replay} o ataques adversarios). Los ataques de \emph{replay} (reproducción de una grabación previa de la voz genuina) fueron de los primeros en estudiarse de forma sistemática, con propuestas tempranas de contramedidas basadas en el análisis del canal de grabación y reproducción~\cite{villalba2011replay}; si bien este proyecto se centra en deepfakes generados por TTS/VC más que en \emph{replay}, este tipo de trabajo ilustra el enfoque general de detectar artefactos introducidos por el proceso de falsificación, independientemente de su origen. La comunidad ha organizado esta investigación principalmente alrededor de la serie de retos ASVspoof, cuyas ediciones sucesivas (2015, 2017, 2019, 2021 y la más reciente, ASVspoof5, realizada en 2024) han ido incrementando la diversidad de ataques y la dificultad de las condiciones de evaluación~\cite{asvspoof5}. ASVspoof5 en particular introduce datos recolectados de forma masiva (\emph{crowdsourced}) y ataques generados con codecs neuronales modernos, lo que la convierte en la referencia más actualizada disponible para entrenar y evaluar detectores.
+
+\subsection{Enfoques basados en características acústicas}
+
+La primera familia de métodos se apoya en características diseñadas manualmente que capturan artefactos introducidos por los sistemas de síntesis, como discontinuidades espectrales, características de fase o resolución tiempo-frecuencia no uniforme. Las más utilizadas son los \emph{Constant-Q Cepstral Coefficients} (CQCC), que aplican una transformada de Q constante para obtener mejor resolución en bajas frecuencias, y los \emph{Linear Frequency Cepstral Coefficients} (LFCC), una variante con espaciado lineal en frecuencia. Estas características suelen combinarse con clasificadores convencionales —regresión logística, máquinas de soporte vectorial (SVM) o modelos Gaussianos— y tienen la ventaja de ser computacionalmente livianas, fácilmente interpretables y adecuadas para operar sobre ventanas cortas de audio, lo que las hace atractivas para un escenario de tiempo real con recursos limitados.
+
+\subsection{Modelos de aprendizaje profundo end-to-end}
+
+La segunda familia utiliza redes neuronales que operan directamente sobre la forma de onda cruda, evitando el diseño manual de características. RawNet2 introdujo una arquitectura completamente end-to-end basada en capas convolucionales sobre la señal cruda para tareas de anti-spoofing~\cite{rawnet2}. AASIST extendió esta línea incorporando una red de atención sobre grafos espectro-temporales, integrando información espectral y temporal en un mismo grafo de atención, y se ha convertido en una de las arquitecturas de referencia más citadas en los retos ASVspoof recientes~\cite{aasist}. Ambos modelos están disponibles públicamente con pesos preentrenados sobre ASVspoof, lo que permite su uso por transferencia (\emph{transfer learning}) sin necesidad de reentrenar desde cero, ajustando únicamente sobre el conjunto de voces del laboratorio.
+
+\subsection{Representaciones autosupervisadas (SSL)}
+
+Una tercera línea, cada vez más dominante en los sistemas de mejor desempeño en ASVspoof5, combina modelos fundacionales de habla autosupervisados —wav2vec2~\cite{wav2vec2} y WavLM~\cite{wavlm}— con un clasificador relativamente simple (por ejemplo, una capa densa o un AASIST liviano) entrenado sobre los \emph{embeddings} extraídos. Estos modelos se preentrenan sobre grandes cantidades de habla no etiquetada y capturan representaciones ricas que generalizan mejor ante ataques no vistos durante el entrenamiento, a costa de un mayor costo computacional y de memoria en comparación con los enfoques de características acústicas.
+
+\subsection{Consideraciones para operación en tiempo real}
+
+La literatura revisada evalúa mayoritariamente archivos de audio completos, por lo que su adaptación a un escenario de ventanas sucesivas exige atención a dos factores: (i) la duración mínima de ventana necesaria para que el detector conserve poder discriminativo, dado que características como CQCC/LFCC y modelos como AASIST fueron diseñados y evaluados sobre segmentos de duración variable pero típicamente de varios segundos; y (ii) la estrategia de agregación temporal de las decisiones de ventanas sucesivas, para la cual se contemplan al menos cuatro alternativas: decisión independiente por ventana, promedio de probabilidades, voto mayoritario, y exigencia de un umbral sostenido durante varias ventanas consecutivas antes de emitir un veredicto. Esta última estrategia resulta de particular interés porque permite controlar explícitamente el compromiso entre tiempo hasta la primera decisión confiable y tasa de falsos positivos.
+
+\section{Selección Justificada de Enfoques}
+
+Con base en la revisión anterior y considerando los recursos de cómputo disponibles y el alcance del proyecto, se seleccionan dos enfoques complementarios para la fase de implementación:
+
+\begin{itemize}
+\item \textbf{Enfoque A (interpretable):} extracción de LFCC combinada con un clasificador SVM o de regresión logística. Se elige LFCC sobre CQCC por su menor costo computacional al no requerir la transformada de Q constante, lo cual favorece la operación en tiempo real, aceptando una posible pérdida marginal de desempeño en frecuencias bajas.
+\item \textbf{Enfoque B (preentrenado):} AASIST utilizado por transferencia, ajustado (\emph{fine-tuned}) sobre el conjunto de voces del laboratorio. Se prefiere AASIST sobre RawNet2 por su desempeño superior reportado consistentemente en los retos ASVspoof más recientes, y sobre una combinación wav2vec2/WavLM + clasificador por su menor huella computacional, factor relevante para cumplir los requisitos de latencia del sistema en tiempo real. La opción SSL (wav2vec2/WavLM) queda como alternativa a explorar si el desempeño de AASIST resulta insuficiente sobre voces en español costarricense.
+\end{itemize}
+
+Esta combinación permite comparar de forma directa un modelo interpretable de bajo costo computacional contra un modelo de aprendizaje profundo de mayor capacidad, evaluando en ambos casos el compromiso entre precisión, latencia y tiempo hasta una decisión confiable.
+
+\section{Protocolo de Evaluación}
+
+\subsection{Conjunto de datos}
+
+Se reutilizará, en la medida de lo posible, el conjunto de voces naturales y sintéticas generado durante el proyecto previo de evaluación comparativa de sistemas TTS del laboratorio, complementado únicamente cuando sea necesario con datos adicionales (por ejemplo, ASVspoof5 para pruebas de generalización ante ataques no vistos en español).
+
+\subsection{Particiones}
+
+El conjunto se dividirá en entrenamiento, validación y prueba, garantizando que las grabaciones de un mismo locutor o de un mismo sistema TTS no aparezcan simultáneamente en más de una partición, con el fin de evitar fugas de información que produzcan una evaluación optimista de forma artificial.
+
+\subsection{Longitudes de ventana}
+
+Se evaluarán ventanas de 0.5\,s, 1\,s, 2\,s, 3\,s y 5\,s, con y sin solapamiento, para caracterizar el compromiso entre rapidez de detección y confiabilidad.
+
+\subsection{Métricas}
+
+\begin{itemize}
+\item \textbf{Clasificación:} \emph{Equal Error Rate} (EER), precisión, \emph{recall} y F1.
+\item \textbf{Operación en tiempo real:} latencia de inferencia por ventana, \emph{Real-Time Factor} (RTF, definido como el tiempo de procesamiento entre la duración del audio procesado), tiempo hasta la primera decisión confiable, y consumo computacional aproximado (uso de CPU/GPU y memoria).
+\end{itemize}
+
+\section{Arquitectura Preliminar del Sistema}
+
+La Figura~\ref{fig:arquitectura} resume el flujo propuesto para el sistema de detección continua. El audio de entrada (proveniente de micrófono o de un archivo reproducido como flujo) se segmenta en ventanas sucesivas de duración configurable, posiblemente con solapamiento. Cada ventana se procesa en paralelo por los dos detectores seleccionados (Enfoque A y Enfoque B), cada uno de los cuales produce un puntaje de probabilidad de audio sintético. Estos puntajes se acumulan en un módulo de decisión temporal, que aplica la estrategia de agregación seleccionada (promedio, voto mayoritario o umbral sostenido) para producir una salida binaria (real/falso) junto con un nivel de confianza, actualizada de forma continua a medida que llegan nuevas ventanas.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=0.55cm and 0.9cm,
+    block/.style={rectangle, draw, fill=blue!8, rounded corners, text width=2.5cm, text centered, minimum height=1cm, font=\small},
+    decision/.style={rectangle, draw, fill=orange!12, rounded corners, text width=2.6cm, text centered, minimum height=1cm, font=\small},
+    arrow/.style={-{Latex[length=2mm]}, thick}
+]
+\node[block] (input) {Entrada de audio\\(micrófono / flujo)};
+\node[block, below=of input] (window) {Segmentación en ventanas sucesivas};
+\node[block, below left=0.5cm and -0.2cm of window] (detA) {Detector A\\(LFCC + SVM)};
+\node[block, below right=0.5cm and -0.2cm of window] (detB) {Detector B\\(AASIST, transferencia)};
+\node[decision, below=1.6cm of window] (agg) {Acumulación temporal de decisiones};
+\node[block, below=of agg] (output) {Salida: real / falso + confianza};
+
+\draw[arrow] (input) -- (window);
+\draw[arrow] (window) -- (detA);
+\draw[arrow] (window) -- (detB);
+\draw[arrow] (detA) |- (agg);
+\draw[arrow] (detB) |- (agg);
+\draw[arrow] (agg) -- (output);
+\end{tikzpicture}
+\caption{Arquitectura preliminar del sistema de detección continua de voces sintéticas.}
+\label{fig:arquitectura}
+\end{figure}
+
+Esta arquitectura se refinará en los siguientes entregables a partir de los resultados experimentales obtenidos con distintas duraciones de ventana y estrategias de agregación temporal.
+
+\section{Conclusiones Preliminares}
+
+La revisión del estado del arte confirma que existen técnicas maduras y con implementaciones públicas disponibles tanto en la familia de características acústicas interpretables como en la de modelos preentrenados, lo cual hace viable el enfoque comparativo propuesto sin necesidad de diseñar arquitecturas nuevas. El principal reto técnico del proyecto no radica en la disponibilidad de detectores, sino en su adaptación a un régimen de ventanas cortas y en el diseño de una estrategia de decisión temporal que balancee correctamente latencia y confiabilidad, aspectos que serán abordados experimentalmente en el segundo entregable.
+
+\begin{thebibliography}{9}
+
+\bibitem{asvspoof5}
+X. Wang \emph{et al.}, ``ASVspoof 5: Design, collection and validation of resources for spoofing, deepfake, and adversarial attack detection using crowdsourced speech,'' \emph{Computer Speech \& Language}, vol. 95, 2026.
+
+\bibitem{rawnet2}
+H. Tak, J. Patino, M. Todisco, A. Nautsch, N. Evans, and A. Larcher, ``End-to-end anti-spoofing with RawNet2,'' in \emph{Proc. ICASSP}, 2021, pp. 6369--6373.
+
+\bibitem{aasist}
+J.-w. Jung, H.-S. Heo, H. Tak, H.-j. Shim, J. S. Chung, B.-J. Lee, H.-J. Yu, and N. Evans, ``AASIST: Audio anti-spoofing using integrated spectro-temporal graph attention networks,'' in \emph{Proc. ICASSP}, 2022, pp. 6367--6371.
+
+\bibitem{wav2vec2}
+A. Baevski, H. Zhou, A. Mohamed, and M. Auli, ``wav2vec 2.0: A framework for self-supervised learning of speech representations,'' in \emph{Proc. NeurIPS}, 2020.
+
+\bibitem{wavlm}
+S. Chen \emph{et al.}, ``WavLM: Large-scale self-supervised pre-training for full stack speech processing,'' \emph{IEEE Journal of Selected Topics in Signal Processing}, vol. 16, no. 6, pp. 1505--1518, 2022.
+
+\bibitem{cqcc}
+M. Todisco, H. Delgado, and N. Evans, ``Constant Q cepstral coefficients: A spoofing countermeasure for automatic speaker verification,'' \emph{Computer Speech \& Language}, vol. 45, pp. 516--535, 2017.
+
+\bibitem{villalba2011replay}
+J. Villalba and E. Lleida, ``Preventing replay attacks on speaker verification systems,'' in \emph{Proc. IEEE International Carnahan Conference on Security Technology (ICCST)}, 2011, pp. 1--8.
+
+\end{thebibliography}
+
+\end{document}
