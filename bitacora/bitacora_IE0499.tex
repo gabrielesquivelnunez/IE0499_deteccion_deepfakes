@@ -1,0 +1,219 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tabularx}
+
+\definecolor{ucrblue}{RGB}{20,60,90}
+
+\titleformat{\section}{\normalfont\Large\bfseries\color{ucrblue}}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\cfoot{\thepage}
+
+\newenvironment{sesion}[2]{%
+  \subsection*{Fecha: #1 \hfill Horas invertidas: #2}
+  \vspace{-0.3cm}
+  \hrule
+  \vspace{0.3cm}
+}{\vspace{0.5cm}}
+
+\newcommand{\campo}[1]{\textbf{#1}}
+
+\begin{document}
+
+% ---------- PORTADA ----------
+\begin{titlepage}
+\centering
+\vspace*{1.5cm}
+{\large Universidad de Costa Rica\par}
+{\large Escuela de Ingeniería Eléctrica\par}
+\vspace{1cm}
+{\Large Proyecto Eléctrico -- IE-0499\par}
+\vspace{2cm}
+{\huge \bfseries Bitácora\par}
+\vspace{1cm}
+\rule{0.7\textwidth}{0.4pt}\\[0.4cm]
+{\Large\bfseries Detección en tiempo real de deepfakes de audio\\ (voces sintéticas) aplicada al español costarricense\par}
+\rule{0.7\textwidth}{0.4pt}
+\vspace{3cm}
+
+{\large Gabriel Esquivel Núñez\par}
+{\large Carné: C22799\par}
+
+\vfill
+
+{\large II Ciclo -- 2026\par}
+\vspace{0.5cm}
+\end{titlepage}
+
+% ---------- DATOS GENERALES DEL PROYECTO ----------
+\section*{Datos generales del proyecto}
+
+\campo{Título:} Detección en tiempo real de deepfakes de audio (voces sintéticas) aplicada al español costarricense.
+
+\vspace{0.3cm}
+\campo{Objetivo general:} Implementar y evaluar un sistema de detección de voces sintéticas (deepfakes de audio) capaz de operar sobre audio continuo o en flujo, mediante la adaptación de técnicas existentes de anti-spoofing, con aplicación a voces en español costarricense.
+
+\vspace{0.3cm}
+\campo{Objetivos específicos:}
+\begin{enumerate}[label=\arabic*.]
+\item Revisar el estado del arte en detección de deepfakes de audio y anti-spoofing de voz, con énfasis en técnicas adaptables al procesamiento por ventanas y a escenarios de tiempo real.
+\item Seleccionar e implementar al menos dos enfoques de detección complementarios (uno basado en características acústicas y otro en modelos o representaciones preentrenadas), integrados a la estructura del repositorio del laboratorio.
+\item Adaptar el detector para procesar audio en ventanas temporales sucesivas y estudiar el efecto de la duración de ventana y del mecanismo de decisión temporal sobre precisión, latencia y tiempo de decisión confiable.
+\item Evaluar el desempeño y la robustez del sistema sobre voces naturales y sintéticas, y construir un demostrador funcional de detección en reproducción o captura continua de audio.
+\end{enumerate}
+
+\vspace{0.3cm}
+\campo{Entregables:}
+\begin{enumerate}[label=\arabic*.]
+\item Informe de revisión y diseño del sistema de detección en tiempo real -- 4 de setiembre de 2026.
+\item Detector base y procesamiento por ventanas -- 25 de setiembre de 2026.
+\item Sistema de detección en tiempo real e informe de evaluación -- 24 de octubre de 2026.
+\item Informe final y demostrador funcional -- 27 de noviembre de 2026.
+\end{enumerate}
+
+\vspace{0.3cm}
+\campo{Proyecto base del laboratorio:} el trabajo parte de la infraestructura del proyecto \textit{voice-similarity-eval} del laboratorio (LAPA-CR), un toolkit reproducible para evaluar similitud de locutor y calidad perceptual en sistemas TTS y de conversión de voz. El presente proyecto complementa dicho toolkit con un módulo de detección de audio sintético (anti-spoofing) orientado a operación en tiempo real.
+
+\newpage
+
+% ---------- SEMANA 1 ----------
+\section{Semana 1 (10/08/2026 -- 16/08/2026)}
+
+\begin{sesion}{11/08/2026}{2 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Confirmar el alcance del proyecto y los entregables definidos en la propuesta.
+\item Identificar los conceptos clave que era necesario investigar antes de iniciar la implementación.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se revisó a fondo el enunciado de la propuesta de proyecto eléctrico, identificando los cuatro entregables y sus fechas límite.
+\item Se listaron los conceptos a investigar: anti-spoofing de voz, retos ASVspoof, características acústicas (CQCC/LFCC), modelos end-to-end (RawNet2, AASIST) y representaciones autosupervisadas (wav2vec2, WavLM).
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante; la sesión fue principalmente de planificación.
+\end{sesion}
+
+\begin{sesion}{13/08/2026}{3 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Comprender el problema de anti-spoofing en verificación de locutor y su relación con los sistemas de detección de deepfakes de audio.
+\item Estudiar los enfoques clásicos basados en características acústicas.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se investigó el marco general de los retos ASVspoof (incluyendo la edición más reciente, ASVspoof5) como referencia estándar del área.
+\item Se estudiaron los coeficientes CQCC y LFCC como características acústicas interpretables, y su combinación típica con clasificadores como SVM o regresión logística.
+\end{itemize}
+\campo{Dificultades encontradas.} La bibliografía asume conocimientos previos de procesamiento de señales de voz (transformada Q constante, análisis cepstral), por lo que se requirió tiempo adicional de repaso.
+\end{sesion}
+
+\begin{sesion}{15/08/2026}{3 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Estudiar los modelos de aprendizaje profundo de referencia en anti-spoofing (RawNet2, AASIST) y las representaciones autosupervisadas (wav2vec2, WavLM).
+\item Revisar la estructura y el alcance del repositorio base del laboratorio.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se investigaron las arquitecturas de RawNet2 y AASIST, así como la disponibilidad de pesos preentrenados sobre ASVspoof para uso por transferencia.
+\item Se revisó el repositorio \textit{voice-similarity-eval} (LAPA-CR), utilizado por el laboratorio para evaluar similitud de locutor y calidad perceptual en voces sintéticas, con el fin de entender su estructura modular (\texttt{features/}, \texttt{metrics/}, \texttt{perceptual\_tests/}, \texttt{robustness/}) y cómo se integraría un módulo de detección de audio sintético.
+\end{itemize}
+\campo{Dificultades encontradas.} El repositorio base está orientado a evaluación de similitud, no a detección de spoofing, por lo que fue necesario analizar cómo adaptar su estructura modular a un módulo nuevo de anti-spoofing en tiempo real.
+\end{sesion}
+
+% ---------- SEMANA 2 ----------
+\section{Semana 2 (17/08/2026 -- 23/08/2026)}
+
+\begin{sesion}{18/08/2026}{2 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Investigar las consideraciones necesarias para adaptar los detectores a un régimen de ventanas cortas de audio.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se estudiaron las estrategias de agregación temporal de decisiones (decisión independiente por ventana, promedio de probabilidades, voto mayoritario, umbral sostenido).
+\item Se identificó el compromiso entre duración de ventana, latencia y confiabilidad de la detección como uno de los principales retos técnicos del proyecto.
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante.
+\end{sesion}
+
+\begin{sesion}{20/08/2026}{3 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Definir la estructura del informe de revisión y diseño del sistema (primer entregable).
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se definió la estructura del documento: introducción, estado del arte, selección justificada de enfoques, protocolo de evaluación, arquitectura preliminar y conclusiones.
+\item Se creó el esqueleto del documento en LaTeX, formato IEEEtran, con la bibliografía inicial de referencia (ASVspoof5, RawNet2, AASIST, wav2vec2, WavLM, CQCC).
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante.
+\end{sesion}
+
+\begin{sesion}{22/08/2026}{2 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Crear el repositorio de trabajo para el proyecto y dejarlo listo para comenzar la fase de implementación.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se creó el repositorio de trabajo del proyecto, tomando como referencia la estructura del repositorio base del laboratorio (\textit{voice-similarity-eval}).
+\item Se organizó una carpeta inicial para el módulo de detección de audio sintético, coherente con la convención modular del repositorio base (\texttt{features/}, \texttt{metrics/}, etc.).
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante.
+\end{sesion}
+
+% ---------- SEMANA 3 ----------
+\section{Semana 3 (24/08/2026 -- 30/08/2026)}
+
+\begin{sesion}{25/08/2026}{3 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Redactar la sección de estado del arte del informe de revisión.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se redactó la sección de estado del arte, cubriendo enfoques basados en características acústicas (CQCC/LFCC), modelos end-to-end (RawNet2, AASIST) y representaciones autosupervisadas (wav2vec2, WavLM).
+\item Se incluyó una subsección específica sobre las consideraciones necesarias para adaptar estos enfoques a un escenario de operación en tiempo real por ventanas.
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante.
+\end{sesion}
+
+\begin{sesion}{27/08/2026}{2 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Justificar la selección de los dos enfoques de detección a implementar.
+\item Definir el protocolo de evaluación del proyecto.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se seleccionó y justificó el enfoque interpretable (LFCC + SVM/regresión logística) y el enfoque preentrenado (AASIST por transferencia) como las dos técnicas complementarias a implementar.
+\item Se definió el protocolo de evaluación: reutilización del conjunto de voces del laboratorio, particiones sin fuga de información entre locutores/sistemas TTS, longitudes de ventana a evaluar (0.5, 1, 2, 3 y 5 s) y métricas de clasificación y de tiempo real (EER, F1, latencia, RTF).
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante.
+\end{sesion}
+
+\begin{sesion}{29/08/2026}{3 horas}
+\campo{Objetivos.}
+\begin{itemize}
+\item Diseñar la arquitectura preliminar del sistema de detección continua.
+\item Finalizar y compilar el informe de revisión y diseño.
+\end{itemize}
+\campo{Actividades y resultados.}
+\begin{itemize}
+\item Se diseñó el diagrama de bloques de la arquitectura preliminar: entrada de audio, segmentación en ventanas, procesamiento en paralelo por los dos detectores, acumulación temporal de decisiones y salida real/falsa con nivel de confianza.
+\item Se completó la redacción de las conclusiones preliminares del informe y se compiló el documento final en PDF, quedando listo para su revisión antes de la entrega del 4 de setiembre.
+\end{itemize}
+\campo{Dificultades encontradas.} Ninguna relevante.
+\end{sesion}
+
+\end{document}
