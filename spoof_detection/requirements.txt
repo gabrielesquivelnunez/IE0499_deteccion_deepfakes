@@ -1,0 +1,11 @@
+# Detector A (LFCC + SVM) - livianas, corren en CPU sin problema
+numpy
+scipy
+scikit-learn
+soundfile
+joblib
+
+# Detector B (AASIST) - instalar PyTorch aparte según tu hardware,
+# ver https://pytorch.org/get-started/locally/
+# CPU:  pip install torch --index-url https://download.pytorch.org/whl/cpu
+# GPU:  pip install torch --index-url https://download.pytorch.org/whl/cu121
