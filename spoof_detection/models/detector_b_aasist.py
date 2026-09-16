@@ -55,7 +55,11 @@ class AASISTDetector:
     """Wrapper alrededor del modelo oficial AASIST para usarlo por
     transferencia en este proyecto."""
 
-    def __init__(self, config_name: str = "AASIST.conf", device: str | None = None):
+    def __init__(self, config_name: str = "AASIST-L.conf", device: str | None = None):
+        # NOTA: se empieza con AASIST-L por indicación del profesor guía
+        # (2026-09-04): "empecemos con AASIST-L, si vemos que no funciona
+        # bien, pensaremos en la versión completa". Cambiar a "AASIST.conf"
+        # si se decide escalar más adelante.
         torch = _lazy_import_torch()
         from models.AASIST import Model  # noqa: E402  (import del repo externo)
 

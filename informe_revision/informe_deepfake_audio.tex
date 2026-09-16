@@ -61,6 +61,8 @@ Una tercera línea, cada vez más dominante en los sistemas de mejor desempeño 
 
 La literatura revisada evalúa mayoritariamente archivos de audio completos, por lo que su adaptación a un escenario de ventanas sucesivas exige atención a dos factores: (i) la duración mínima de ventana necesaria para que el detector conserve poder discriminativo, dado que características como CQCC/LFCC y modelos como AASIST fueron diseñados y evaluados sobre segmentos de duración variable pero típicamente de varios segundos; y (ii) la estrategia de agregación temporal de las decisiones de ventanas sucesivas, para la cual se contemplan al menos cuatro alternativas: decisión independiente por ventana, promedio de probabilidades, voto mayoritario, y exigencia de un umbral sostenido durante varias ventanas consecutivas antes de emitir un veredicto. Esta última estrategia resulta de particular interés porque permite controlar explícitamente el compromiso entre tiempo hasta la primera decisión confiable y tasa de falsos positivos.
 
+Un tercer factor, señalado por trabajo reciente, es que la operación en tiempo real habitualmente implica transmitir el audio a través de un canal de comunicación (videollamada, VoIP), el cual introduce distorsiones adicionales a las de la sola segmentación por ventanas: supresión de ruido, cancelación de eco, compresión por codec y pérdida de paquetes. Xue \emph{et al.}~\cite{xue2026rtcfake} muestran que estas distorsiones degradan fuertemente el desempeño de detectores entrenados únicamente con audio sin transmitir (el EER promedio se incrementa de 5.4\% a 13.8\% en sus experimentos), y proponen una estrategia de aprendizaje de consistencia a nivel de fonema para mitigar este efecto. Si bien el alcance de este proyecto no contempla replicar dicho conjunto de datos, este hallazgo es relevante para el entregable final: conviene documentar que el desempeño del detector podría degradarse si el audio de prueba proviene de una videollamada real en vez de una grabación directa, y considerarlo como limitación o trabajo futuro.
+
 \section{Selección Justificada de Enfoques}
 
 Con base en la revisión anterior y considerando los recursos de cómputo disponibles y el alcance del proyecto, se seleccionan dos enfoques complementarios para la fase de implementación:
@@ -151,6 +153,9 @@ M. Todisco, H. Delgado, and N. Evans, ``Constant Q cepstral coefficients: A spoo
 
 \bibitem{villalba2011replay}
 J. Villalba and E. Lleida, ``Preventing replay attacks on speaker verification systems,'' in \emph{Proc. IEEE International Carnahan Conference on Security Technology (ICCST)}, 2011, pp. 1--8.
+
+\bibitem{xue2026rtcfake}
+J. Xue, Z. Yi, Y. Huang, Y. Ren, Y. Chen, C. Fan, Z. Su, Y. Zhang, and B. Cai, ``RTCFake: Speech deepfake detection in real-time communication,'' \emph{arXiv preprint arXiv:2604.23742}, 2026.
 
 \end{thebibliography}
 
