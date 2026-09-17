@@ -32,9 +32,18 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import importlib.util
 
 AASIST_REPO = Path(__file__).resolve().parents[1] / "external" / "aasist"
-sys.path.insert(0, str(AASIST_REPO))
+def _load_official_aasist_model_class():
+    """Carga la clase Model de external/aasist/models/AASIST.py directamente
+    por su ruta de archivo, evitando el choque de nombres con nuestra
+    propia carpeta models/."""
+    aasist_model_path = AASIST_REPO / "models" / "AASIST.py"
+    spec = importlib.util.spec_from_file_location("aasist_official_model", aasist_model_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.Model
 
 
 def _lazy_import_torch():
@@ -56,7 +65,7 @@ class AASISTDetector:
     def __init__(self, config_name: str = "AASIST-L.conf", device: str | None = None):
 
         torch = _lazy_import_torch()
-        from models.AASIST import Model  # noqa: E402  (import del repo externo)
+        Model = _load_official_aasist_model_class()
 
         config_path = AASIST_REPO / "config" / config_name
         with open(config_path) as f:

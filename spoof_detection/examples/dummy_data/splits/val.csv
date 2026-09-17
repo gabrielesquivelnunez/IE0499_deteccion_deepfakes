@@ -1,0 +1,7 @@
+path,label,group_id
+/home/gabriel/AA_UNIVERSIDAD/proyecto_electrico/IE0499_deteccion_deepfakes/spoof_detection/examples/dummy_data/raw/real/speaker01_utt000.wav,real,speaker01
+/home/gabriel/AA_UNIVERSIDAD/proyecto_electrico/IE0499_deteccion_deepfakes/spoof_detection/examples/dummy_data/raw/real/speaker01_utt001.wav,real,speaker01
+/home/gabriel/AA_UNIVERSIDAD/proyecto_electrico/IE0499_deteccion_deepfakes/spoof_detection/examples/dummy_data/raw/real/speaker01_utt002.wav,real,speaker01
+/home/gabriel/AA_UNIVERSIDAD/proyecto_electrico/IE0499_deteccion_deepfakes/spoof_detection/examples/dummy_data/raw/fake/tts_speaker01_utt000.wav,fake,speaker01
+/home/gabriel/AA_UNIVERSIDAD/proyecto_electrico/IE0499_deteccion_deepfakes/spoof_detection/examples/dummy_data/raw/fake/tts_speaker01_utt001.wav,fake,speaker01
+/home/gabriel/AA_UNIVERSIDAD/proyecto_electrico/IE0499_deteccion_deepfakes/spoof_detection/examples/dummy_data/raw/fake/tts_speaker01_utt002.wav,fake,speaker01
