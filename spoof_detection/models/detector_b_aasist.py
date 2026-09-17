@@ -15,18 +15,16 @@ Requisitos:
 
 Este script NO reentrena la arquitectura desde cero: carga los pesos
 oficiales y expone dos modos de uso:
-    - Extractor congelado + puntaje directo (evaluación "zero-shot").
+    - Extractor congelado y puntaje directo (evaluación "zero-shot").
     - Fine-tuning: descongela las últimas capas y sigue entrenando con
       los datos del laboratorio (recomendado una vez que haya conjunto
       de datos propio disponible).
 
-IMPORTANTE: el modelo AASIST oficial espera audio crudo a 16 kHz, de
+El modelo AASIST oficial espera audio crudo a 16 kHz, de
 longitud fija (nb_samp = 64600 muestras ≈ 4.04 s, ver
 external/aasist/config/AASIST.conf). Nuestras ventanas de duración
 variable (0.5, 1, 2, 3, 5 s) se recortan/rellenan a esa longitud antes de
-pasar por el modelo. Esta restricción de longitud fija es justamente uno
-de los puntos que hay que documentar como limitación al comparar AASIST
-contra el Enfoque A (LFCC+SVM), que sí acepta ventanas de longitud libre.
+pasar por el modelo.
 """
 
 import json
@@ -47,7 +45,7 @@ def _lazy_import_torch():
         raise ImportError(
             "PyTorch no está instalado. Instalarlo con:\n"
             "  pip install torch --index-url https://download.pytorch.org/whl/cpu\n"
-            "(o la variante con CUDA correspondiente a tu GPU)."
+            "(o la variante con CUDA correspondiente a su GPU)."
         ) from e
 
 
@@ -56,10 +54,7 @@ class AASISTDetector:
     transferencia en este proyecto."""
 
     def __init__(self, config_name: str = "AASIST-L.conf", device: str | None = None):
-        # NOTA: se empieza con AASIST-L por indicación del profesor guía
-        # (2026-09-04): "empecemos con AASIST-L, si vemos que no funciona
-        # bien, pensaremos en la versión completa". Cambiar a "AASIST.conf"
-        # si se decide escalar más adelante.
+
         torch = _lazy_import_torch()
         from models.AASIST import Model  # noqa: E402  (import del repo externo)
 

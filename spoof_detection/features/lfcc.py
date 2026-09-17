@@ -4,15 +4,12 @@ lfcc.py
 Extracción de LFCC (Linear Frequency Cepstral Coefficients): el Enfoque A
 (interpretable) del proyecto.
 
-Pipeline (igual al descrito en el informe de revisión):
-    señal --> STFT --> banco de filtros lineal --> log --> DCT --> LFCC
+Pipeline: señal --> STFT --> banco de filtros lineal --> log --> DCT --> LFCC
 
 A diferencia de los MFCC (que usan un banco de filtros mel, más denso en
 graves), aquí el banco de filtros tiene bandas de ancho IGUAL en Hz.
 
-Implementación con numpy/scipy únicamente, para mantener el detector A
-liviano (coherente con el objetivo de que sea el enfoque de bajo costo
-computacional, apto para tiempo real).
+Implementación con numpy/scipy únicamente.
 """
 
 import numpy as np
@@ -46,8 +43,7 @@ def extract_lfcc(audio: np.ndarray, sr: int, n_lfcc: int = 20,
                   n_filters: int = 40, n_fft: int = 512,
                   win_length_sec: float = 0.025, hop_length_sec: float = 0.010) -> np.ndarray:
     """
-    Extrae LFCC de una señal (típicamente una ventana ya recortada por
-    windowing.make_windows).
+    Extrae LFCC de una señal.
 
     Returns
     -------
@@ -75,9 +71,9 @@ def extract_lfcc(audio: np.ndarray, sr: int, n_lfcc: int = 20,
 
 def lfcc_window_features(audio: np.ndarray, sr: int, **lfcc_kwargs) -> np.ndarray:
     """
-    Reduce los LFCC por trama de una ventana a UN SOLO vector fijo,
-    concatenando media y desviación estándar a través del tiempo.
-    Esto es lo que finalmente entra al SVM (necesita vectores de tamaño
+    Reduce los LFCC por trama de una ventana a un solo vector fijo,
+    concatenando media y desviación estándar a través del tiempo, 
+    lo que entra al SVM (necesita vectores de tamaño
     fijo, sin importar la duración de la ventana).
     """
     lfcc = extract_lfcc(audio, sr, **lfcc_kwargs)  # (n_frames, n_lfcc)

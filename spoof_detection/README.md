@@ -2,14 +2,12 @@
 
 Módulo del proyecto **"Detección en tiempo real de deepfakes de audio (voces
 sintéticas) aplicada al español costarricense"** (IE-0499 / IE-0435).
-Corresponde al **segundo entregable**: detector base y procesamiento por
-ventanas.
+Corresponde al detector base y procesamiento por ventanas.
 
-Integra dos enfoques complementarios, según lo definido en el informe de
-revisión:
+Integra dos enfoques complementarios:
 
 - **Detector A** (`models/detector_a_lfcc_svm.py`): características LFCC +
-  clasificador SVM. Interpretable, liviano, apto para tiempo real.
+  clasificador SVM. Interpretable, liviano, uso en tiempo real.
 - **Detector B** (`models/detector_b_aasist.py`): AASIST preentrenado, usado
   por transferencia (transfer learning).
 
@@ -22,7 +20,7 @@ convención de carpetas (`features/`, `metrics/`, etc.).
 ```
 spoof_detection/
 ├── data/
-│   └── prepare_dataset.py     # organiza train/val/test sin fuga de info. por locutor
+│   └── prepare_dataset.py     # organizado como train/val/test. Por locutor
 ├── features/
 │   ├── windowing.py           # corta audio en ventanas sucesivas (0.5, 1, 2, 3, 5 s...)
 │   └── lfcc.py                # extracción de LFCC (numpy/scipy, sin dependencias pesadas)
@@ -46,7 +44,7 @@ pip install -r requirements.txt
 ```
 
 El Detector B necesita además PyTorch, que **no** está en `requirements.txt`
-por su tamaño. Instalarlo según tu hardware:
+por su tamaño. Instalarlo según el hardware:
 
 ```bash
 # CPU

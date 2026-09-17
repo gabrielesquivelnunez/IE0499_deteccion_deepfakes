@@ -2,9 +2,8 @@
 windowing.py
 
 Corta una señal de audio en ventanas sucesivas de duración configurable,
-con o sin solapamiento. Es la pieza base para simular procesamiento en
-tiempo real: en vez de analizar el audio completo, lo vamos "troceando"
-como llegaría en un flujo continuo (streaming).
+con o sin solapamiento. Analiza el audio completo, lo divide simulando 
+un flujo continuo (streaming).
 
 Uso típico:
     from features.windowing import make_windows

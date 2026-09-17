@@ -1,4 +1,4 @@
-# Detector A (LFCC + SVM) - livianas, corren en CPU sin problema
+# Detector A (LFCC + SVM) - (livianas),
 numpy
 scipy
 scikit-learn

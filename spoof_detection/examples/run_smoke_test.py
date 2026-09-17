@@ -1,15 +1,14 @@
 """
 run_smoke_test.py
 
-Prueba rápida de humo (smoke test): corre TODO el pipeline del Detector A
-sobre audio sintético de juguete (no es habla real, son tonos generados),
-solo para confirmar que la instalación y el código funcionan de punta a
-punta ANTES de conectar el dataset real del laboratorio.
+Prueba rápida, corre todo el pipeline del Detector A
+sobre audio sintético de juguete (tonos generados),
+solo para confirmar que la instalación y el código funcionan antes 
+de conectar el dataset real del laboratorio.
 
 Uso:
     python examples/run_smoke_test.py
 
-Qué hace:
     1. Genera un puñado de audios .wav sintéticos en examples/dummy_data/raw
        (si no existen ya).
     2. Corre data/prepare_dataset.py para armar las particiones.
@@ -64,7 +63,7 @@ def main():
     else:
         print(f"Ya existen audios en {RAW_DIR}, se reutilizan.")
 
-    print("\n=== Paso 1: organizar particiones ===")
+    print("\n 1. Organizar particiones ")
     subprocess.run(
         [sys.executable, "data/prepare_dataset.py"],
         cwd=ROOT,
@@ -90,8 +89,7 @@ def main():
         check=True,
     )
 
-    print("\nSmoke test completo. Si llegaste hasta aquí sin errores, "
-          "el entorno está listo para conectar el dataset real.")
+    print("\nSmoke test completo.")
 
 
 if __name__ == "__main__":

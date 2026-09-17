@@ -3,15 +3,9 @@ prepare_dataset.py
 
 Organiza el conjunto de voces naturales y sintéticas en particiones de
 entrenamiento, validación y prueba, EVITANDO que el mismo locutor (o el
-mismo sistema TTS) aparezca en más de una partición. Esto es clave: si un
-locutor aparece tanto en train como en test, el detector puede "memorizar"
-rasgos de ese locutor en vez de aprender a distinguir real/sintético en
-general, y los resultados de evaluación quedarían artificialmente optimistas.
+mismo sistema TTS) aparezca en más de una partición.
 
-Formato esperado de entrada (ajustar según cómo vengan organizados los
-datos del laboratorio, p. ej. reutilizando el dataset del proyecto de
-evaluación de similitud de voces):
-
+Formato esperado de entrada:
     data/raw/
     ├── real/
     │   ├── speaker01_utt001.wav
@@ -45,12 +39,6 @@ def default_group_extractor(filepath: Path) -> str:
     """
     Extrae un identificador de grupo (locutor) del nombre del archivo.
     Ajustar esta función a la convención real de nombres del dataset.
-
-    Ejemplos que reconoce por defecto:
-        speaker01_utt001.wav          -> "speaker01"
-        ttsA_speaker01_utt001.wav     -> "speaker01"  (agrupa por locutor
-                                                        de referencia, no
-                                                        por sistema TTS)
     """
     stem = filepath.stem
     match = re.search(r"(speaker\d+)", stem, flags=re.IGNORECASE)
@@ -80,8 +68,8 @@ def scan_dataset(raw_dir: str, group_extractor=default_group_extractor) -> list[
 def split_dataset(entries: list[AudioEntry], test_size: float = 0.2,
                    val_size: float = 0.1, random_state: int = 42):
     """
-    Divide en train/val/test agrupando por group_id (locutor), usando
-    GroupShuffleSplit de scikit-learn para garantizar que ningún grupo
+    Divide en train/val/test agrupando por group_id, usa
+    GroupShuffleSplit para que ningún grupo
     quede repartido entre particiones distintas.
     """
     groups = [e.group_id for e in entries]
