@@ -34,6 +34,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 from sklearn.svm import SVC
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 import joblib
@@ -75,7 +76,10 @@ def build_feature_matrix(entries: list[dict], window_sec: float, hop_sec: float,
 def train_svm(X_train, y_train):
     clf = make_pipeline(
         StandardScaler(),
-        SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, class_weight="balanced"),
+        CalibratedClassifierCV(
+            SVC(kernel="rbf", C=1.0, gamma="scale", class_weight="balanced"),
+            ensemble=False,
+        ),
     )
     clf.fit(X_train, y_train)
     return clf

@@ -1,9 +1,11 @@
 __pycache__/
 *.pyc
-external/aasist/
-data/raw/
-data/splits/
-models/checkpoints/
+*.wav
+**/external/aasist/
+**/data/raw/
+**/data/splits/
+**/models/checkpoints/
+venv/
 *.joblib
 *.pth
 *.aux

@@ -55,6 +55,9 @@ def extract_lfcc(audio: np.ndarray, sr: int, n_lfcc: int = 20,
     hop_length = int(round(hop_length_sec * sr))
     noverlap = max(win_length - hop_length, 0)
 
+    if n_fft < win_length:
+        n_fft = 1 << (win_length - 1).bit_length()
+
     if len(audio) < win_length:
         audio = np.pad(audio, (0, win_length - len(audio)))
 
