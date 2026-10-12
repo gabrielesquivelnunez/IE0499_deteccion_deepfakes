@@ -1,51 +1,48 @@
-# Resultados preliminares -- Entregable 2
+# Resultados — Entregable 2 (corregidos) y exploración del Entregable 3
 
-Experimentos corridos con `scripts/run_entregable2_experiments.py` sobre el
-dataset real del laboratorio (`voice-similarity-eval`): 14 archivos, 4
-locutores (Daniel, Felipe, Nayelhi, Paula), 10 grabaciones naturales y 4
-versiones sintéticas (XTTS).
+## Corrección importante (11 oct 2026)
+Los resultados iniciales del Detector A (EER 3.47 / 3.99 / 0.00 / 13.75 / 0.00 %) estaban
+**contaminados por una confusión de tasa de muestreo**: los audios reales están a 16 kHz y los
+sintéticos (XTTS) a 24 kHz. El banco de filtros LFCC cubre 0–sr/2, así que el detector podía separar
+las clases solo por la tasa de muestreo. Se comprobó con un test placebo
+(`scripts/placebo_sample_rate.py`): con clases idénticas salvo la tasa de muestreo, el pipeline
+viejo da EER 0.00 % y el corregido ~50 % (azar).
 
-## Resultados por duración de ventana
+| Ventana | Placebo, pipeline viejo | Placebo, todo a 16 kHz |
+|---|---|---|
+| 0.5 s | 0.00 % | 51.43 % |
+| 1.0 s | 0.00 % | 48.44 % |
+| 2.0 s | 0.00 % | 44.27 % |
 
-| Ventana | Detector A (LFCC+SVM, LOSO) -- EER | Detector B (AASIST-L, zero-shot) -- EER | Ventanas evaluadas (real/fake) |
+Corrección: todo el audio se remuestrea a 16 kHz antes de extraer características
+(`features/audio_io.py`). El Detector B ya lo hacía (AASIST exige 16 kHz).
+
+## EER por ventana (corregido; 14 archivos, 4 locutores)
+| Ventana | Ventanas reales/sint. | Detector A (LFCC+SVM, LOSO) | Detector B (AASIST-L, zero-shot) |
 |---|---|---|---|
-| 0.5 s | 3.47% | 41.32% | 143 / 58 |
-| 1.0 s | 3.99% | 35.50% | 68 / 28 |
-| 2.0 s | 0.00% | 46.51% | 32 / 13 |
-| 3.0 s | 13.75% | 50.00% | 20 / 8 |
-| 5.0 s | 0.00% | 60.00% | 10 / 5 |
+| 0.5 s | 143 / 58 | 23.96 % | 41.32 % |
+| 1 s | 68 / 28 | 21.74 % | 35.50 % |
+| 2 s | 32 / 13 | 15.50 % | 46.51 % |
+| 3 s | 20 / 8 | 25.00 % | 50.00 % |
+| 5 s | 10 / 5 | 60.00 % | 60.00 % |
 
 ## Interpretación
+- Detector A (LFCC+SVM): con la confusión eliminada, el EER pasa a 15–25 % para ventanas de 0.5–3 s.
+  Hay señal real, pero modesta.
+- Detector B (AASIST-L): sin ajuste fino está cerca del azar (35–60 %). Es lo esperado: AASIST-L se
+  entrenó con ASVspoof y no con voces XTTS en español. Requiere fine-tuning.
+- A 5 s hay solo 10 + 5 ventanas: el 60 % es ruido estadístico, no una tendencia.
 
-- **El Detector A (LFCC+SVM) supera claramente al Detector B en esta etapa**,
-  lo cual es esperable: A se entrena directamente sobre estos datos mediante
-  leave-one-speaker-out (LOSO), mientras que B se evalúa **zero-shot**, es
-  decir, usando los pesos de AASIST-L tal como fueron entrenados sobre
-  ASVspoof2019 LA (habla en inglés, ataques de TTS/VC distintos a XTTS),
-  sin ningún ajuste al español costarricense ni al dataset del laboratorio.
-- El desempeño débil de AASIST-L (35-60% EER, cercano al azar) **no es una
-  falla del wrapper ni del modelo**: es el punto de partida esperado antes
-  del fine-tuning, y confirma la necesidad de la etapa de transferencia
-  planeada para el entregable 3.
-- **Los resultados de ambos detectores deben tomarse con cautela.** El
-  dataset actual es muy pequeño (4 locutores, 14 archivos), por lo que:
-  - Los EER de 0% en algunas ventanas probablemente reflejan el tamaño
-    reducido del conjunto de prueba en esa ronda de LOSO (p. ej., a 5 s solo
-    hay 10 ventanas reales y 5 sintéticas en total), no un desempeño
-    perfecto real.
-  - No hay una tendencia limpia y monótona entre duración de ventana y EER
-    para el Detector A (3.99% -> 0.00% -> 13.75% -> 0.00%), lo cual es
-    consistente con ruido estadístico por bajo número de muestras, más que
-    con una relación real entre ventana y desempeño.
-- **Ampliar el dataset (autorizado por el profesor guía) es el paso que más
-  va a mejorar la fiabilidad de estos números**, más que cualquier ajuste
-  fino de hiperparámetros en esta etapa.
+## Estrategias temporales (Detector A, LOSO; 10 flujos reales, 4 sintéticos)
+Las estrategias que integran varias ventanas reducen las falsas alarmas (de 40–60 % con decisión
+independiente a 0–10 %) a costa de mayor tiempo hasta la decisión (1–6 s). `sostenido_k2` con
+ventana de 2 s dio la mejor combinación observada (acc 92–100 %, 0 % falsas alarmas, ~3–4 s).
+**No es una conclusión estadística:** con solo 4 flujos sintéticos, un flujo cambia el recall 25 puntos.
 
-## Próximos pasos (entregable 3)
-
-1. Fine-tuning de AASIST-L sobre el dataset del laboratorio (actualmente
-   solo se evaluó zero-shot).
-2. Repetir estos experimentos con un dataset ampliado (más locutores) para
-   obtener EER estadísticamente más confiables.
-3. Evaluar estrategias de agregación temporal entre ventanas sucesivas
-   (promedio, voto mayoritario, umbral sostenido), pendiente en esta etapa.
+## Limitaciones
+1. Dataset minúsculo (14 archivos, 4 locutores, un solo TTS): resultados exploratorios.
+2. Aun con 16 kHz, la cadena de grabación difiere entre clases (reales grabados por personas,
+   sintéticos de XTTS). El detector podría estar captando canal/micrófono y no "voz sintética".
+   Mitigación pendiente: pasar ambas clases por la misma cadena (mismo códec/ruido) y más TTS.
+3. Detector B no ha sido ajustado; falta el bucle de fine-tuning.
+4. Umbral fijo de 0.5, no calibrado.

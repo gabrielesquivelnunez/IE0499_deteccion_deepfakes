@@ -86,7 +86,7 @@ class AASISTDetector:
         print(f"AASIST cargado desde {weights_path.name} en {self.device}")
 
     def _fit_length(self, audio: np.ndarray) -> np.ndarray:
-        """Recorta o repite (padding circular, como hace el repo oficial)
+        """Recorta o repite (padding circular, wrap-around)
         el audio a la longitud fija que espera el modelo."""
         if len(audio) >= self.nb_samp:
             return audio[: self.nb_samp]
@@ -94,7 +94,7 @@ class AASISTDetector:
         return np.tile(audio, n_repeats)[: self.nb_samp]
 
     def score_window(self, audio: np.ndarray, sr: int) -> float:
-        """Devuelve la probabilidad de que la ventana sea SINTÉTICA (spoof).
+        """Devuelve la probabilidad de que la ventana sea un spoof.
         Asume audio mono. Si sr != 16000, hay que remuestrear antes de
         llamar a esta función (ver features/windowing.py + resample)."""
         torch = _lazy_import_torch()

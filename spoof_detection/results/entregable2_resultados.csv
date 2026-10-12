@@ -1,11 +1,6 @@
-window_sec,detector,eer,n_bonafide,n_spoof,tiempo_s
-0.5,A (LFCC+SVM),0.03472389679286231,143,58,0.4
-0.5,"B (AASIST-L, zero-shot)",0.41319025801784426,143,58,4.2
-1.0,A (LFCC+SVM),0.03991596638655462,68,28,0.2
-1.0,"B (AASIST-L, zero-shot)",0.3550420168067227,68,28,1.8
-2.0,A (LFCC+SVM),0.0,32,13,0.2
-2.0,"B (AASIST-L, zero-shot)",0.4651442307692308,32,13,0.8
-3.0,A (LFCC+SVM),0.1375,20,8,0.2
-3.0,"B (AASIST-L, zero-shot)",0.5,20,8,0.5
-5.0,A (LFCC+SVM),0.0,10,5,0.2
-5.0,"B (AASIST-L, zero-shot)",0.6,10,5,0.3
+window_sec,n_real,n_fake,eer_detector_a,eer_detector_b
+0.5,143,58,23.96,41.32
+1.0,68,28,21.74,35.5
+2.0,32,13,15.5,46.51
+3.0,20,8,25.0,50.0
+5.0,10,5,60.0,60.0
