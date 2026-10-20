@@ -7,29 +7,29 @@ El detector produce un puntaje (probabilidad de audio sintético) por cada
 ventana de audio. Aquí se decide cómo convertir esa secuencia de puntajes
 en una decisión real/falso que se va actualizando a medida que llega audio.
 
-Estrategias (una clase por cada una):
-
+Estrategias se usa una clase por cada una, que mantiene memoria de las últimas N ventanas y decide según su lógica interna.
+Las estrategias implementadas son:
 1. PerWindow            : cada ventana decide sola, sin memoria.
-2. MovingAverage        : promedio de las últimas N probabilidades vs. umbral.
+2. MovingAverage        : promedio de las últimas N probabilidades contra el umbral.
 3. MajorityVote         : cada una de las últimas N ventanas "vota" y gana la
                           mayoría estricta (en un empate, se decide "real").
 4. SustainedThreshold   : declara "falso" solo si el puntaje se mantiene sobre
                           el umbral durante k ventanas consecutivas, y "real"
                           si se mantiene bajo el umbral k ventanas
                           consecutivas; en cualquier otro caso mantiene la
-                          decisión anterior (histéresis).
+                          decisión anterior.
 
 Todas exponen la misma interfaz:
     decider.reset()
     decision = decider.update(score)    # -> Decision(ready, is_fake, score)
 
-`ready` indica si ya hay suficiente evidencia para emitir una decisión (p. ej.
-el promedio de N ventanas necesita N ventanas). Mientras `ready` sea False,
-`is_fake` es None. El "tiempo hasta la primera decisión confiable" es el
+`ready` indica si ya hay suficiente evidencia para emitir una decisión.
+ Mientras `ready` sea False,`is_fake` es None.
+El "tiempo hasta la primera decisión confiable" es el
 instante (en segundos de audio consumido) en que `ready` pasa a True por
 primera vez.
 
-Además se incluyen funciones para evaluar una estrategia sobre un conjunto de
+Se incluyen funciones para evaluar una estrategia sobre un conjunto de
 flujos (un flujo = la secuencia de puntajes de un archivo de audio):
     run_stream(...)           -> línea de tiempo de decisiones de un flujo
     summarize_strategy(...)   -> métricas agregadas (precisión, recall, F1,
@@ -47,9 +47,9 @@ import numpy as np
 
 @dataclass
 class Decision:
-    ready: bool                 # ¿hay evidencia suficiente para decidir?
+    ready: bool                 #  hay evidencia suficiente para decidir?
     is_fake: Optional[bool]     # None mientras ready=False
-    score: Optional[float]      # puntaje agregado usado para decidir (si aplica)
+    score: Optional[float]      # puntaje agregado usado para decidir en el caso de que aplique
 
 
 class TemporalDecider:
@@ -104,8 +104,8 @@ class MajorityVote(TemporalDecider):
     """Voto mayoritario entre las últimas N ventanas.
 
     Cada ventana vota "falso" si su puntaje >= umbral. Gana "falso" solo con
-    mayoría estricta (más de N/2 votos); en un empate (N par) se decide "real",
-    que es la opción conservadora ante falsas alarmas.
+    mayoría estricta o sea cuando hay más de N/2 votos; en un empate (N par) se decide "real".
+
     """
 
     def __init__(self, threshold: float = 0.5, n: int = 3):
@@ -128,13 +128,13 @@ class MajorityVote(TemporalDecider):
 
 
 class SustainedThreshold(TemporalDecider):
-    """Umbral sostenido durante k ventanas consecutivas (con histéresis).
-
+    """
     - Declara "falso" cuando hay k ventanas seguidas con puntaje >= umbral.
     - Declara "real" cuando hay k ventanas seguidas con puntaje < umbral.
     - Si no se cumple ninguna de las dos, conserva la decisión anterior.
     Un pico aislado de ruido no cambia la decisión, a costa de tardar al menos
     k ventanas en emitir la primera.
+
     """
 
     def __init__(self, threshold: float = 0.5, k: int = 3):
@@ -198,9 +198,9 @@ def run_stream(scores: Sequence[float], decider: TemporalDecider,
 
     Returns dict con:
         decisions     : lista de Decision, una por ventana
-        first_index   : índice de la ventana de la primera decisión (o None)
-        first_is_fake : primera decisión emitida (o None)
-        t_first       : segundos de audio hasta la primera decisión (o None)
+        first_index   : índice de la ventana de la primera decisión
+        first_is_fake : primera decisión emitida 
+        t_first       : segundos de audio hasta la primera decisión 
         ever_fake     : True si en algún momento la decisión fue "falso"
     """
     decider.reset()
@@ -231,6 +231,7 @@ def run_stream(scores: Sequence[float], decider: TemporalDecider,
 
 def summarize_strategy(streams: Sequence[tuple], make_decider: Callable[[], TemporalDecider],
                        window_sec: float, hop_sec: float) -> dict:
+    
     """Métricas de una estrategia sobre varios flujos.
 
     streams: lista de (scores, label) con label 1 = sintético, 0 = real.

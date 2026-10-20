@@ -61,7 +61,7 @@ def streams_detector_a_loso(entries, window_sec, hop_sec):
 
         clf = make_pipeline(
             StandardScaler(),
-            SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, class_weight="balanced"),
+            SVC(kernel="rbf", C=1.0, gamma="scale", probability=True, class_weight="balanced", random_state=0),
         )
         clf.fit(X, y)
 
