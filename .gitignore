@@ -12,3 +12,10 @@ venv/
 *.log
 *.out
 .DS_Store
+# Datos personales
+spoof_detection/results/*.wav
+spoof_detection/textos/cortos/
+*.m4a
+# Datos personales: no subir
+spoof_detection/textos/cortos/
+*.m4a

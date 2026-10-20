@@ -69,7 +69,7 @@ def parse_speaker_and_label(filepath: Path) -> tuple[str, str]:
         nayelhi_real_1.wav         -> ("nayelhi", "real")
     """
     stem = filepath.stem
-    match = re.match(r"^([a-zA-Z]+)_", stem)
+    match = re.match(r"^([a-zA-Z0-9]+)_", stem)
     speaker = match.group(1).lower() if match else stem
     label = "fake" if "sintetico" in stem.lower() else "real"
     return speaker, label
