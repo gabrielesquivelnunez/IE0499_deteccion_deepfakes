@@ -47,7 +47,7 @@ def detector_a_scores(entries, window_sec):
             continue
         clf = make_pipeline(StandardScaler(),
                             SVC(kernel="rbf", C=1.0, gamma="scale",
-                                probability=True, class_weight="balanced"))
+                                probability=True, class_weight="balanced", random_state=0))
         clf.fit(X, y)
         for e in test_entries:
             audio, sr = load_audio_16k(e.path)
@@ -82,6 +82,8 @@ def main():
     args = ap.parse_args()
 
     entries = scan_dataset(args.raw_dir)
+    if not entries:
+        sys.exit(f"No se encontraron .wav en {args.raw_dir}. Revisa la ruta --raw-dir.")
     n_fake = sum(e.label == "fake" for e in entries)
     print(f"Dataset: {len(entries)} archivos | {len(entries)-n_fake} reales, {n_fake} sintéticos "
           f"| {len({e.group_id for e in entries})} locutores | audio remuestreado a 16 kHz\n")
