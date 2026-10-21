@@ -1,3 +1,0 @@
-window_sec,eer_zero_shot,eer_finetuned,epochs,lr
-1.0,50.67,31.5,8,0.0001
-2.0,46.45,46.62,8,0.0001
