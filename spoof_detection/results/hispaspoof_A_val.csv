@@ -1,0 +1,6 @@
+generador,archivos,ventanas,eer_ventana,frac_ventanas_sobre_umbral,frac_archivos_marcados_sinteticos,window_sec,overlap,threshold
+natural,444,6491,,0.0849,0.0721,1.0,0.5,0.5
+elevenlabs,492,5334,0.444,0.0167,0.0,1.0,0.5,0.5
+f5-tts,528,6739,0.5082,0.0135,0.0038,1.0,0.5,0.5
+xtts-v2,548,6105,0.1038,0.7954,0.7445,1.0,0.5,0.5
+your-tts,510,6597,0.496,0.1904,0.1706,1.0,0.5,0.5

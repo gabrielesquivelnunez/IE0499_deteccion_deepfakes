@@ -19,7 +19,7 @@ hablante. Si el archivo de salida ya existe, se salta (use --overwrite para reha
 
 Uso (con venv_xtts activo):
     export COQUI_TOS_AGREED=1
-    python generar_sinteticos_texto.py --raw-dir RUTA/data/raw \
+    python generacion/generar_sinteticos_texto.py --raw-dir RUTA/data/raw \
         --texto-largo textos/largo.txt --texto-corto textos/corto.txt \
         --textos-cortos-dir textos/cortos
 """

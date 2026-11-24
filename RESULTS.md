@@ -106,7 +106,7 @@ Ventana de 2 s, salto de 1 s, `sostenido_k2`, Detector A.
 
 ## Limitaciones
 
-1. Son 11 hablantes y un solo generador (XTTS v2); no se mide la generalización a otros generadores.
+1. Son 11 hablantes y un solo generador de entrenamiento (XTTS v2); la generalización a otros generadores se midió en el entregable 4 y es nula (ver más abajo).
 2. El canal sigue confundido con la clase (reales de iPhone, sintéticos de XTTS). Excluir a los dos
    hablantes con AAC no cambió el EER del A de forma apreciable, pero no permite separar el efecto del
    canal.
@@ -115,9 +115,51 @@ Ventana de 2 s, salto de 1 s, `sostenido_k2`, Detector A.
 5. El detector clasifica silencio y ruido de fondo como sintético; falta detección de actividad de voz.
 6. La prueba en vivo usa un solo hablante y un canal distinto al de entrenamiento.
 
-## Pendiente para el entregable 4
+## Pendiente declarado en el entregable 3
+
+Estado al cierre del entregable 4: detección de actividad de voz (hecha en el demostrador), otros generadores (hecho con Qwen3, Audio8 y HISPASpoof); el mismo canal para ambas clases y la fusión A+B quedan como trabajo futuro.
+
 
 - Pasar ambas clases por la misma cadena de grabación y compresión.
 - Incorporar otros generadores de voz.
 - Detección de actividad de voz antes de puntuar.
 - Evaluar la fusión de puntajes A+B con los puntajes guardados (`results/puntajes_B_*s.json`).
+
+## Entregable 4
+
+Configuración recomendada: Detector A, ventana de 1 s, salto de 0,5 s, umbral 0,5, umbral sostenido de 3
+ventanas, precedido de detección de actividad de voz (en el demostrador). Sobre XTTS v2: detección 87,9 %,
+falsas alarmas 16,7 %, primera decisión a los 2,25 s, latencia de 0,6 a 1,4 ms por ventana en CPU.
+
+### Generalización a generadores no vistos (Detector A, LOSO, 24 flujos reales)
+
+| Generador | Audios | EER 1 s | EER 2 s | Detección (1 s, k=3) | Ventanas > umbral |
+|---|---|---|---|---|---|
+| XTTS v2 (control) | 33 | 19,3 % | 19,4 % | 87,9 % | -- |
+| Audio8-TTS | 18 | 46,0 % | 44,7 % | 16,7 % | 8,1 % |
+| Qwen3-TTS | 17 | 61,8 % | 60,6 % | 23,5 % | 6,1 % |
+
+Entrenar con un generador adicional no mejoró la detección del generador no visto, aumentó las falsas alarmas
+de 16,7 % a entre 42 y 75 % y empeoró el EER de XTTS (27 a 31 %). Un audio de Qwen3 (spk009, primer texto) no
+se pudo generar por memoria y se omitió.
+
+### HISPASpoof (partición de validación, sin entrenar con ella, 1 s, 50 %)
+
+| Generador | Archivos | EER (%) | Ventanas > umbral (%) | Archivos marcados (%) |
+|---|---|---|---|---|
+| Real (natural) | 444 | -- | 8,5 | 7,2 (falsas alarmas) |
+| ElevenLabs | 492 | 44,4 | 1,7 | 0,0 |
+| F5-TTS | 528 | 50,8 | 1,4 | 0,4 |
+| XTTS v2 | 548 | 10,4 | 79,5 | 74,5 |
+| YourTTS | 510 | 49,6 | 19,0 | 17,1 |
+
+El detector reconoce XTTS v2 aun con otros hablantes y canales, pero no los demás generadores. La partición de
+validación no incluye Fish Speech ni XTTS v1 y no trae el acento por archivo. Los reales de HISPASpoof no
+contienen español de Costa Rica.
+
+### Pendiente (trabajo futuro)
+
+- Evaluar el Detector B y la fusión A+B con otros generadores.
+- Pruebas con degradaciones acústicas (ruido, compresión) y ambas clases con el mismo canal.
+- Partición de prueba de HISPASpoof (Fish Speech, XTTS v1) y análisis por acento.
+- Más hablantes y más generadores de entrenamiento; audio parcialmente falso.

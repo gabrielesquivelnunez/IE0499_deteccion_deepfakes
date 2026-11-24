@@ -7,7 +7,7 @@ persona. Escribe una transcripción por hablante en --out-dir/spkNNN.txt.
 
 Uso (cualquier venv, por ejemplo venv_xtts):
     pip install faster-whisper
-    python transcribir_cortos.py --raw-dir $RAW --out-dir textos/cortos
+    python generacion/transcribir_cortos.py --raw-dir $RAW --out-dir textos/cortos
 
 REVISA los .txt a mano (los nombres propios y las palabras raras se transcriben
 mal) y corrige lo que haga falta antes de generar los sintéticos.
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 # Se corre desde spoof_detection/: se usa el mismo cargador (16 kHz mono) que el proyecto
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # raíz de spoof_detection/
 from features.audio_io import load_audio_16k
 
 

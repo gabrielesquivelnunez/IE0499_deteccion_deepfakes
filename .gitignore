@@ -19,3 +19,5 @@ spoof_detection/textos/cortos/
 # Datos personales: no subir
 spoof_detection/textos/cortos/
 *.m4a
+spoof_detection/data/otros_tts/
+spoof_detection/results/demo_final.png
